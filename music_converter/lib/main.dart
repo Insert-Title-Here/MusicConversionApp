@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
-import 'dart:developer';
 
-Future<void> main() async {
+void main() {
   // http.Response response = await http.post(Uri.parse('http://127.0.0.1:50000/'));
 
   // if (response.statusCode == 200) {
@@ -67,34 +66,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  XFile? _image;
-
-  Future<void> pickImage() async {
-    try {
-      final image = await ImagePicker().pickImage(source: ImageSource.gallery);
-      if (image == null) return;
-
-      setState(() {
-        _image = image;
-      });
-
-      String url = 'http://127.0.0.1:50000/';
-
-      final request = http.MultipartRequest('POST', Uri.parse(url));
-      final imageBytes = await getBytesFromImage(image);
-      request.fields['image'] = imageBytes
-          .toString(); // Placeholder, replace with appropriate key if needed
-      final response = await request.send();
-    } catch (error) {
-      print(error);
-    }
-  }
-
-  Future<List<int>> getBytesFromImage(XFile? image) async {
-    if (image == null) return []; // Handle cases where no image is selected
-    final bytes = await image.readAsBytes();
-    return bytes.toList();
-  }
+ 
+  final ImagePicker _picker = ImagePicker();
+  var _counter = 0;
 
   void _incrementCounter() async {
     setState(() {
@@ -103,7 +77,7 @@ class _MyHomePageState extends State<MyHomePage> {
       // so that the display can reflect the updated values. If we changed
       // _counter without calling setState(), then the build method would not be
       // called again, and so nothing would appear to happen.
-      //_counter++;
+      _counter++;
     });
   }
 
@@ -129,34 +103,21 @@ class _MyHomePageState extends State<MyHomePage> {
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
+          
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Text(
               'You have pushed the button this many times:',
             ),
             Text(
-              'Stuff',
+              '$_counter',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: pickImage,
-        tooltip: 'Increment',
+        onPressed: _incrementCounter,
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );

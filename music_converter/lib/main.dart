@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
@@ -42,13 +45,13 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MusicOCRScreen(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({super.key, required this.title});
+class MusicOCRScreen extends StatefulWidget {
+  //MyHomePage({super.key, required this.title});
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -59,27 +62,59 @@ class MyHomePage extends StatefulWidget {
   // used by the build method of the State. Fields in a Widget subclass are
   // always marked "final".
 
-  final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _MusicOCRScreenState createState() => _MusicOCRScreenState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+
+
+class _MusicOCRScreenState extends State<MusicOCRScreen> {
  
   final ImagePicker _picker = ImagePicker();
-  var _counter = 0;
+  String _musicXml = '';
 
-  void _incrementCounter() async {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+
+  Future<void> _processImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    
+    if (image != null) {
+      debugPrint("In here");
+      try {
+        final response = await _uploadImage(File(image.path));
+        if (response.statusCode == 200) {
+          debugPrint("In here 2");
+          setState(() {
+            _musicXml = jsonDecode(response.body)['musicxml'];
+          });
+        } else {
+          print('Failed to process image: ${response.statusCode}');
+        }
+      } catch (e) {
+        print("Failed to process IMAGE: $e");
+      }
+    }else{
+      debugPrint("Not in here");
+    }
+
+    
   }
+
+  Future<http.Response> _uploadImage(File imageFile) async {
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('http://192.168.86.21:5000/process_image'), //127.0.0.1
+    );
+    debugPrint("In here 3");
+    request.files.add(await http.MultipartFile.fromPath('image', imageFile.path));
+    debugPrint("In here 4");
+    var streamedResponse = await request.send();
+    debugPrint("In here 5");
+    return await http.Response.fromStream(streamedResponse);
+  }
+    
+
+  
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +132,7 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: Text("HIIIII"),
       ),
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
@@ -110,14 +145,14 @@ class _MyHomePageState extends State<MyHomePage> {
               'You have pushed the button this many times:',
             ),
             Text(
-              '$_counter',
+              'waaahhhh',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: _processImage,
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
